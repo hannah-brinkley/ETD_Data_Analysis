@@ -91,6 +91,23 @@ RUN conda install --quiet --yes \
 # Might have to fall back onto pip for some of these...
 RUN pip install troveharvester
 
+USER $NB_USER
+
+RUN conda install --quiet --yes \
+    'elasticsearch==6.1.1' && \
+    conda clean -tipsy && \
+	fix-permissions $CONDA_DIR && \
+    fix-permissions /home/$NB_USER
+    
+COPY load_metadata.ipynb /home/$NB_USER/
+
+RUN jupyter trust /home/$NB_USER/load_metadata.ipynb
+
+USER root
+
+EXPOSE 8888
+RUN fix-permissions /home/$NB_USER
+
 # Add RUN statements to install packages as the $NB_USER defined in the base images.
 
 # Add a "USER root" statement followed by RUN statements to install system packages using yum.
