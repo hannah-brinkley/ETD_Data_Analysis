@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  # use a supplied elasticsearch image but have a bespoke frontend to it
+  frontend:
+    container_name: frontend
+    
+    image: britishlibrarylabs/hwb_elasticsearch
+    build: .
+    
+    # Persist the work
+    volumes: 
+      - workspace:/work
+    links:
+      - elasticsearch
+    
+    ports:
+      - "8888:8888"
+    
+    environment:
+      - ES_HOSTNAME=elasticsearch
+      - PORT=8888
+      
+  elasticsearch: # Elasticsearch for the metadata
+    container_name: blmetadata-es
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.1.4
+    
+    # Persist the data
+    volumes: 
+      - esdata:/usr/share/elasticsearch/data
+    
+    # From https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html
+    # The vm.max_map_count kernel setting needs to be set to at least 262144 for production use.
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      
+    # No need to change from typical es ports
+    ports:
+      - "9300:9300"
+      - "9200:9200"
+
+volumes: 
+  esdata:
+  workspace:
+
